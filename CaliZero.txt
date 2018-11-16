@@ -1,0 +1,49 @@
+A			caliB
+
+AdcZero		AdcZero+measA		AdcZero+measB
+
+由于传感器是线性不变的，0mmhg 100mmhg 200mmhg 三个点对应的压力值等比例，因此有以下关系
+0/AdcZero = caliA/（AdcZero+measA） = caliB / （AdcZero+measB）
+
+假设压力传感的压力值为SampleVal，SampleVal<(AdcZero+measA),求当压力值x，单位为mmhg
+
+（x-0）/（SampleVal-AdcZero）= （caliA -0）/（AdcZero+measA-AdcZero）
+x =（SampleVal-AdcZero）*caliA / measA
+
+假设压力传感的压力值为SampleVal，(AdcZero+measA)<SampleVal<(AdcZero+measB),求当压力值x，单位为mmhg
+
+（x-caliA）/（SampleVal-(AdcZero+measA)) = （caliB -caliA）/（(AdcZero+measB)-(AdcZero+measA)）
+x = （SampleVal-AdcZero-measA)*（caliB -caliA）/（measB-measA）+ caliA
+
+struct
+{
+	int AdcZero;  //0mmHg的采样值
+	int caliA;    //校准A点的设定值，范围:150mmHg
+	int caliB;    //校准B点的设定值，范围:300mmHg
+	int measA;    //校准A点测量值-零点测量值(是一个差值)
+	int measB;    //校准B点测量值-零点测量值(是一个差值)
+}NBP_CALIPARA;
+NBP_CALIPARA gCaliPara;
+/*!
+******************************************************
+功能：将采样压力值转换为mmHg
+入口参数：压力采样数据
+出口参数：真实压力值的100倍
+******************************************************
+*/
+int LsbToPress(int SampleVal)
+{
+	int ret = 0;
+
+	if (SampleVal < gCaliPara.measA + gCaliPara.AdcZero)
+	{
+		ret = (SampleVal - gCaliPara.AdcZero) * 100 * gCaliPara.caliA / gCaliPara.measA;
+	}
+	else
+	{
+		ret = (SampleVal - gCaliPara.AdcZero - gCaliPara.measA) * 100 * (gCaliPara.caliB - gCaliPara.caliA) / (gCaliPara.measB - gCaliPara.measA) + gCaliPara.caliA*100;
+	}
+
+	return ret;
+}
+
